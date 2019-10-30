@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,31 @@ namespace SaintCoinach.Cmd {
     using Xiv;
 
     static class ExdHelper {
+        static CultureInfo _culture = new CultureInfo("en-US", false);
+
+        public static void SaveAsCsv(Ex.Relational.IRelationalSheet sheet, Language language, string path, bool writeRaw) {
+            using (var s = new StreamWriter(path, false, Encoding.UTF8)) {
+                var indexLine = new StringBuilder("key");
+                var nameLine = new StringBuilder("#");
+                var typeLine = new StringBuilder("int32");
+
+                var colIndices = new List<int>();
+                foreach (var col in sheet.Header.Columns) {
+                    indexLine.AppendFormat(",{0}", col.Index);
+                    nameLine.AppendFormat(",{0}", col.Name);
+                    typeLine.AppendFormat(",{0}", col.ValueType);
+
+                    colIndices.Add(col.Index);
+                }
+
+                s.WriteLine(indexLine);
+                s.WriteLine(nameLine);
+                s.WriteLine(typeLine);
+
+                ExdHelper.WriteRows(s, sheet, language, colIndices, writeRaw);
+            }
+        }
+
         public static void WriteRows(StreamWriter s, ISheet sheet, Language language, IEnumerable<int> colIndices, bool writeRaw) {
             if (sheet.Header.Variant == 1)
                 WriteRowsCore(s, sheet.Cast<Ex.IRow>(), language, colIndices, writeRaw, WriteRowKey);
@@ -37,12 +63,13 @@ namespace SaintCoinach.Cmd {
                     else
                         v = writeRaw ? multiRow.GetRaw(col, language) : multiRow[col, language];
 
+                    s.Write(",");
                     if (v == null)
-                        s.Write(",");
+                        continue;
                     else if (IsUnescaped(v))
-                        s.Write(",{0}", v);
+                        s.Write(string.Format(_culture, "{0}", v));
                     else
-                        s.Write(",\"{0}\"", v.ToString().Replace("\"", "\"\""));
+                        s.Write("\"{0}\"", v.ToString().Replace("\"", "\"\""));
                 }
                 s.WriteLine();
 

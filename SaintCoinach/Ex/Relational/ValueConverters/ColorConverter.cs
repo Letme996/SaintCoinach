@@ -1,8 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
+using SaintCoinach.Ex.Relational.Definition;
 using System;
 using System.Drawing;
-
-using YamlDotNet.Serialization;
 
 namespace SaintCoinach.Ex.Relational.ValueConverters {
     public class ColorConverter : IValueConverter {
@@ -22,9 +21,7 @@ namespace SaintCoinach.Ex.Relational.ValueConverters {
 
         #region IValueConverter Members
 
-        [YamlIgnore]
         public string TargetTypeName { get { return "Color"; } }
-        [YamlIgnore]
         public Type TargetType { get { return typeof(Color); } }
 
         public object Convert(IDataRow row, object rawValue) {
@@ -49,6 +46,8 @@ namespace SaintCoinach.Ex.Relational.ValueConverters {
         public static ColorConverter FromJson(JToken obj) {
             return new ColorConverter();
         }
+
+        public void ResolveReferences(SheetDefinition sheetDef) { }
 
         #endregion
     }

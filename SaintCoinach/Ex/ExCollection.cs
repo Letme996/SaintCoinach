@@ -106,11 +106,11 @@ namespace SaintCoinach.Ex {
         public ISheet GetSheet(string name) {
             const string ExHPathFormat = "exd/{0}.exh";
 
+            if (_Sheets.TryGetValue(name, out var sheetRef) && sheetRef.TryGetTarget(out var sheet)) return sheet;
+
             //name = FixName(name);
             if (!_AvailableSheets.Contains(name))
-                throw new KeyNotFoundException();
-
-            if (_Sheets.TryGetValue(name, out var sheetRef) && sheetRef.TryGetTarget(out var sheet)) return sheet;
+                throw new KeyNotFoundException($"Unknown sheet '{name}'");
 
             var exhPath = string.Format(ExHPathFormat, name);
             var exh = PackCollection.GetFile(exhPath);
@@ -143,7 +143,7 @@ namespace SaintCoinach.Ex {
         }
 
         private ISheet CreateSheet<T>(Header header) where T : IDataRow {
-            if (header.AvailableLanguages.Count() > 1)
+            if (header.AvailableLanguagesCount >= 1)
                 return new MultiSheet<MultiRow, T>(this, header);
             return new DataSheet<T>(this, header, header.AvailableLanguages.First());
         }

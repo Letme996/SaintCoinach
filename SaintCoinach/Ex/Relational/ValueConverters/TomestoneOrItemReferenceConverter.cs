@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
+using SaintCoinach.Ex.Relational.Definition;
 using SaintCoinach.Xiv;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using YamlDotNet.Serialization;
 
 namespace SaintCoinach.Ex.Relational.ValueConverters {
     public class TomestoneOrItemReferenceConverter : IValueConverter {
@@ -13,9 +13,7 @@ namespace SaintCoinach.Ex.Relational.ValueConverters {
 
         #region IValueConverter Members
 
-        [YamlIgnore]
         public string TargetTypeName => "Item";
-        [YamlIgnore]
         public Type TargetType => typeof(IRelationalRow);
 
         public object Convert(IDataRow row, object rawValue) {
@@ -56,6 +54,8 @@ namespace SaintCoinach.Ex.Relational.ValueConverters {
         public static TomestoneOrItemReferenceConverter FromJson(JToken obj) {
             return new TomestoneOrItemReferenceConverter();
         }
+
+        public void ResolveReferences(SheetDefinition sheetDef) { }
 
         #endregion
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace SaintCoinach.IO {
@@ -9,7 +10,7 @@ namespace SaintCoinach.IO {
         #region Fields
 
         private readonly Dictionary<string, uint> _FileNameMap = new Dictionary<string, uint>();
-        private readonly Dictionary<uint, WeakReference<File>> _Files = new Dictionary<uint, WeakReference<File>>();
+        private readonly ConcurrentDictionary<uint, WeakReference<File>> _Files = new ConcurrentDictionary<uint, WeakReference<File>>();
         private string _Path;
 
         #endregion
@@ -64,22 +65,26 @@ namespace SaintCoinach.IO {
             hash = Hash.Compute(name);
 
             var file = GetFile(hash);
+            if (file == null)
+                throw new System.IO.FileNotFoundException("Pack file not found '" + name + "'");
             file.Path = string.Format("{0}/{1}", this.Path, name);
             return file;
         }
 
         public File GetFile(uint key) {
-            WeakReference<File> fileRef;
-            File file;
-            if (_Files.TryGetValue(key, out fileRef) && fileRef.TryGetTarget(out file))
+            if (_Files.TryGetValue(key, out var fileRef) && fileRef.TryGetTarget(out var file))
                 return file;
 
-            var index = Index.Files[key];
+            if (!Index.Files.TryGetValue(key, out var index))
+                return null;
+
             file = FileFactory.Get(this.Pack, index);
-            if (_Files.ContainsKey(key))
-                _Files[key].SetTarget(file);
-            else
-                _Files.Add(key, new WeakReference<File>(file));
+            _Files.AddOrUpdate(key,
+                k => new WeakReference<File>(file),
+                (k, r) => {
+                    r.SetTarget(file);
+                    return r;
+                });
             return file;
         }
 
@@ -96,17 +101,18 @@ namespace SaintCoinach.IO {
         }
 
         public bool TryGetFile(uint key, out File file) {
-            WeakReference<File> fileRef;
-            if (_Files.TryGetValue(key, out fileRef) && fileRef.TryGetTarget(out file))
+            if (_Files.TryGetValue(key, out var fileRef) && fileRef.TryGetTarget(out file))
                 return true;
 
-            IndexFile index;
-            if (Index.Files.TryGetValue(key, out index)) {
-                file = FileFactory.Get(this.Pack, index);
-                if (_Files.ContainsKey(key))
-                    _Files[key].SetTarget(file);
-                else
-                    _Files.Add(key, new WeakReference<File>(file));
+            if (Index.Files.TryGetValue(key, out var index)) {
+                var theFile = FileFactory.Get(this.Pack, index);
+                _Files.AddOrUpdate(key,
+                    k => new WeakReference<File>(theFile),
+                    (k, r) => {
+                        r.SetTarget(theFile);
+                        return r;
+                    });
+                file = theFile;
                 return true;
             }
 

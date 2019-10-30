@@ -19,12 +19,6 @@ namespace SaintCoinach.Xiv {
         #region Properties
 
         /// <summary>
-        /// Gets the <see cref="InstanceContentType"/> of the current content.
-        /// </summary>
-        /// <value>The <see cref="InstanceContentType"/> of the current content.</value>
-        public InstanceContentType InstanceContentType { get { return As<InstanceContentType>(); } }
-
-        /// <summary>
         /// Gets the time limit to complete the current content.
         /// </summary>
         /// <value>The time limit to complete the current content.</value>
@@ -100,12 +94,6 @@ namespace SaintCoinach.Xiv {
                     yield return new ContentReward(tomeB, sumB);
             }
         }
-
-        /// <summary>
-        /// Gets the <see cref="TerritoryType"/> for the current content.
-        /// </summary>
-        /// <value>The <see cref="TerritoryType"/> for the current content.</value>
-        public TerritoryType TerritoryType { get { return As<TerritoryType>(); } }
 
         public InstanceContentData Data { get { return _Data ?? (_Data = new InstanceContentData(this)); } }
 
